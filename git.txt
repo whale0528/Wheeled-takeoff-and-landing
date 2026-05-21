@@ -1,0 +1,17 @@
+  git status
+  git pull
+  git add .
+  git commit -m "feat: xxxxx"
+  git push
+addpath("D:/project/simulink-agentic-toolkit")
+satk_initialize
+  请读取项目中的 [相关脚本文件名]，参考这些代码，帮我写论文中 [章节名称] 部分的内容。
+
+  要求：
+  1. 侧重体现工程工作量，理论推导为辅，不堆公式
+  2. 不贴代码，用流程描述和伪代码替代
+  3. 格式按标准本科论文（宋体正文、黑体标题、1.5倍行距）
+  4. 代码和图片的位置留占位符，我后期贴入
+  5. 仿真数据留"待填"标记
+
+  先给我看章节大纲，确认后再逐节展开写。
