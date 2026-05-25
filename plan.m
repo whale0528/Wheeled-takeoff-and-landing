@@ -172,17 +172,18 @@ omigaz0;];
 
 
 %% 起飞阶段参考参数
-VR = 40.0;                  % m/s, 抬轮速度
+VR = 50;                  % m/s, 抬轮速度
 H_safe = 10.0;              % m, 安全爬升高度
 Hdot_safe = 1.0;            % m/s, 安全爬升率
 H_climb_complete = 1000.0;  % m, 爬升完成高度
 
 rotation_rate_cmd = 3.0 * DH;  % rad/s, 抬轮俯仰角速度指令
 climb_eta_cmd = 6.0 * DH;      % rad, 初始爬升航迹倾角
-
+Vs=sqrt((2*m*g)/(rho0*S_ref*(CLa+CLq)))
 
 % 配平时，升力和阻力
-D0=1000;
+D0=800;
 L0=5102;
 delta_p0=-4.5;%D
+controller;
 save("plan.mat");
