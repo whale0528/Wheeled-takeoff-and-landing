@@ -42,6 +42,11 @@ invI = inv(I);
 rho0 = 1.225;         % kg/m^3
 a0 = 340.294;         % m/s
 
+%% 风扰 (地面系)
+% 坐标系: X前 Y上 Z右
+% 正值 = 顺风/上升/右风, 负值 = 逆风/下降/左风
+W_g = [0; 0; 0];       % 地面系风速 [Wx; Wy; Wz] m/s
+
 %% 升力
 CL0  = 0.083;
 CLa  = 2.50;
@@ -143,7 +148,7 @@ Yg0 = ground_y + wheel_radius - r_gear_b(2,1) - static_deflection;
 %Yg0=1000;
 %% 飞机起飞初始值
 Xg0 = 0.0;            % m
-Zg0 = 20.0;            % m
+Zg0 = 2.0;            % m
 %Vx0_b=200;
  Vx0_b = 0.0;          % m/s
 Vy0_b = 0.0;          % m/s
