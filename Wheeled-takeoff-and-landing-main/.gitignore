@@ -1,0 +1,15 @@
+# Simulink generated files
+slprj/
+*.slxc
+*.slx.autosave
+*.asv
+
+# MATLAB autosave
+*.m~
+
+# Claude Code local settings
+.claude/
+
+# OS files
+Thumbs.db
+Desktop.ini
