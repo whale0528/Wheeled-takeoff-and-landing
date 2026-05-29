@@ -2,7 +2,7 @@
 %% 纵向短周期扰动运动方程动力系数计算 (a24, a25, a34)
 %% =========================================================================
 % 假设此处取你的抬轮速度进行单点测试
-V_test = 136;   % VR = 40.0 m/s
+V_test = 200;   % VR = 40.0 m/s
 zeta = 0.8;
 wd = 15;
 Tr = 1.2;
@@ -27,10 +27,16 @@ else
     % 4. 计算 a34：法向力动力系数 (s^-1)
     % 公式: a34 = Y_alpha / (m * V) = (CLa * q * S) / (m * V)
     a34 = (CLa * q_dynamic * S_ref+D0) / (m * V_test);
+    b24 = -(Cnb *q_dynamic * S_ref * b_ref )/Iyy
+    b27 = -(Cndr * q_dynamic * S_ref * b_ref)/Iyy
+    b34 = (-CSb * q_dynamic * S_ref) / (m * V_test);
 end
-Kn_pitch=(2.2*wd^2*g)/(Tr*(wd^2-a24)*V_test*a34)
-K_alpha=(wd^2-a24)/(2*zeta*wd)
-Kw_pitch=-(2*zeta*wd) / a25
+Kn_pitch=(2.2*wd^2*g)/(Tr*(wd^2-a24)*V_test*a34);
+K_alpha=(wd^2-a24)/(2*zeta*wd);
+Kw_pitch=-(2*zeta*wd) / a25;
+Kw_to_dr=-2*zeta*wd/b27
+Kb_to_wy=(wd^2-b24)/(2*zeta*wd)
+Kn_to_beta=(2.2*wd^2*g)/(Tr*(wd^2-b24)*V_test*b34)
 %% =========================================================================
 %% 打印计算结果
 %% =========================================================================

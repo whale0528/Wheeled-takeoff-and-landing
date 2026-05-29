@@ -59,7 +59,7 @@ Cmq  = -18.0;
 Cmde = 0.90;
 
 %% 侧向力
-CSb  = -0.70;
+CSb  = -0.70;                                                                                                        
 CSr  = 0.15;
 CSdr = 0.18;
 
@@ -67,11 +67,12 @@ CSdr = 0.18;
 Clb  = -0.08;
 Clp  = -0.70;
 Clr  = 0.10;
+%Clr  = 0;
 Clda = 0.20;
-
 %% 偏航力矩
-Cnb  = 0.25;
+Cnb  = -0.25;
 Cnp  = -0.04;
+%Cnp  = 0;
 Cnr  = -0.45;
 Cndr = 0.15;
 
@@ -142,9 +143,9 @@ Yg0 = ground_y + wheel_radius - r_gear_b(2,1) - static_deflection;
 %Yg0=1000;
 %% 飞机起飞初始值
 Xg0 = 0.0;            % m
-Zg0 = 0.0;            % m
-Vx0_b=0;
-%Vx0_b = 0.0;          % m/s
+Zg0 = 20.0;            % m
+%Vx0_b=200;
+ Vx0_b = 0.0;          % m/s
 Vy0_b = 0.0;          % m/s
 Vz0_b = 0.0;          % m/s
 V_min=1;%防止除0；
