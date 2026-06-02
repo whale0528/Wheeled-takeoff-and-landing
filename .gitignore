@@ -7,6 +7,9 @@ slprj/
 # MATLAB autosave
 *.m~
 
+# Node modules (should not be in version control)
+node_modules/
+
 # Claude Code local settings
 .claude/
 
