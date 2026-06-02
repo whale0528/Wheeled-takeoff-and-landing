@@ -23,7 +23,7 @@ Kn_pitch=-(2.2*g*(wd_pitch)^2)/(Tr*(((wd_pitch)^2)-a24)*V_control*a34);
 %% 偏航通道控制器设计
 b24=-Cnb*qc*S_ref*b_ref/Izz;
 b27=-Cndr*qc*S_ref*b_ref/Izz;
-b34=(D0-CSb*qc*S_ref)/(m*V_control);
+b34=(CSb*qc*S_ref)/(m*V_control);
 b37=-CSdr*qc*S_ref/(m*V_control);
 kesi_yaw=0.8;
 Tr_yaw=1.2;
