@@ -1,6 +1,6 @@
 clc;
 clear; 
-
+load("control_design.mat");
 %% 数学运算
 HD = 180 / pi;        % rad -> deg
 DH = pi / 180;        % deg -> rad
@@ -73,6 +73,29 @@ Cnb  = 0.25;
 Cnp  = -0.04;
 Cnr  = -0.45;
 Cndr = -0.15;     % 正方向舵 -> 负偏航力矩
+
+%% 气动力限制
+CL_min = -0.55;
+CL_max =  1.10;   % 正常clean失速
+CL_hard_max = 1.15;  % 短时大舵偏允许
+
+CD_min = 0.045;
+CD_max = 0.80;
+
+CS_max = 0.30;
+
+Cm_max = 2.0;
+Cl_max = 0.30;
+Cn_max = 0.30;
+
+alpha_min   = -8  * DH;
+alpha_linear_max = 12 * DH;
+alpha_stall = 15 * DH;
+alpha_hard  = 18 * DH;
+
+beta_linear_max = 8  * DH;
+beta_hard_max   = 15 * DH;
+
 %% 舵面与推力限制
 de_max = 25;     % d, 升降舵最大偏角
 da_max = 25;     % d, 副翼最大偏角
@@ -150,7 +173,7 @@ Zg0 = ground_z - wheel_radius - r_gear_b(3,1) + static_deflection;
 Xg0 = 0.0;            % m, 前向位置
 
 % 如果原来的 Zg0 = 2.0 是侧偏距，现在应放到 Yg0
-Yg0 = 5.0;            % m, 右向位置，向右为正
+Yg0 = 0.0;            % m, 右向位置，向右为正
 % 如果希望从跑道中心线起飞，用：
 % Yg0 = 0.0;
 
@@ -192,13 +215,12 @@ climb_eta_cmd = 6.0 * DH;      % rad, 初始爬升航迹倾角
 
 
 % 配平时，升力和阻力
-D0=1400;
+D0=1400; 
 L0=5102;
 delta_p0=-4.5;%D
 
 % 爬升性能
 gamma_climbmax=asin((3000-D0)/(m*g))*57.3;%最大爬升角
-VR=100;
-
+VR=100;%抬轮速度
+V_stall_clean = 86.2;%失速速度
 save("plan.mat");
-control_design;
