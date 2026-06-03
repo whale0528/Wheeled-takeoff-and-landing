@@ -150,7 +150,7 @@ Zg0 = ground_z - wheel_radius - r_gear_b(3,1) + static_deflection;
 Xg0 = 0.0;            % m, 前向位置
 
 % 如果原来的 Zg0 = 2.0 是侧偏距，现在应放到 Yg0
-Yg0 = 2.0;            % m, 右向位置，向右为正
+Yg0 = 5.0;            % m, 右向位置，向右为正
 % 如果希望从跑道中心线起飞，用：
 % Yg0 = 0.0;
 
