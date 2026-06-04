@@ -167,17 +167,17 @@ static_deflection = m * g / sum(k_gear);  % m
 % 轮心刚接触地面时：Z_wheel = ground_z - wheel_radius
 % 静态压缩delta后：Z_wheel = ground_z - wheel_radius + delta
 % Z_wheel = Zg0 + r_gear_b(3,1)
-%Zg0 = ground_z - wheel_radius - r_gear_b(3,1) + static_deflection;
-Zg0=-350;
+Zg0 = ground_z - wheel_radius - r_gear_b(3,1) + static_deflection;
+%Zg0=-350;
 %% 飞机起飞初始值
-Xg0 = -8000.0;            % m, 前向位置
+Xg0 = -50000.0;            % m, 前向位置
 
 % 如果原来的 Zg0 = 2.0 是侧偏距，现在应放到 Yg0
 Yg0 = 0.0;            % m, 右向位置，向右为正
 % 如果希望从跑道中心线起飞，用：
 % Yg0 = 0.0;
 
-u0_b = 60.0;           % m/s, 机体系前向速度
+u0_b = 0.0;           % m/s, 机体系前向速度
 v0_b = 0.0;           % m/s, 机体系右向速度
 w0_b = 0.0;           % m/s, 机体系下向速度
 
