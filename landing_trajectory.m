@@ -1,3 +1,7 @@
+
+clc;
+clear;
+
 %% 无人机着陆轨迹
 %  定高平飞→陡下滑→圆弧拉平→浅下滑→指数拉飘→接地
 %  从 X_zero 出发推导全部几何
@@ -167,3 +171,4 @@ fprintf('elseif X <= %.0f  →  ③ H_cmd = %.1f - sqrt(%.0f^2 - (X - %.0f)^2)\n
 fprintf('elseif X <= %.0f  →  ④ H_cmd = -(X - %.0f) * tan(%.0f°)\n', X_D, X_aim, a2*180/pi);
 fprintf('elseif H > 0.5    →  ⑤ H_cmd = %.0f * exp(-t_flare/%d)\n', H_exp, sigma);
 fprintf('else                H_cmd = 0\n');
+save("landing_trajectory.mat");
