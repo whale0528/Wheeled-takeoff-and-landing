@@ -13,6 +13,15 @@ node_modules/
 # Claude Code local settings
 .claude/
 
+# Simulink Design Verifier reports
+sdireports/
+
+# Simulink version export backups
+*.slx.r20*
+
+# Personal notes
+git.txt
+
 # OS files
 Thumbs.db
 Desktop.ini
