@@ -1,6 +1,6 @@
 clc;
 clear;
-load("basedata.mat");
+basedata;
 %% 飞机起飞初始值
 Xg0 = 0.0;            % m, 前向位置
 
