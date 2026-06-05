@@ -161,7 +161,7 @@ w0_b = 0.0;           % m/s, 机体系下向速度
 V_min = 3;            % 防止除0
 
 phi0   = 0.0;         % rad, 滚转角，绕X轴
-theta0 = 0.0;         % rad, 俯仰角，绕Y轴
+theta0 = 3/57.3;         % rad, 俯仰角，绕Y轴
 psi0   = 0.0;         % rad, 偏航角，绕Z轴
 
 p0 = 0.0;             % rad/s, 绕X滚转角速度
@@ -200,5 +200,6 @@ delta_p0=-4.5;%D
 gamma_climbmax=asin((3000-D0)/(m*g))*57.3;%最大爬升角
 VR=100;
 
-save("plan.mat");
+save("landing_plan.mat");
 control_design;
+landing_trajectory;
