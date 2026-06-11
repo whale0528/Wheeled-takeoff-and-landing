@@ -167,8 +167,25 @@ static_deflection = m * g / sum(k_gear);  % m
 % Z_wheel = Zg0 + r_gear_b(3,1)
 Zg0 = ground_z - wheel_radius - r_gear_b(3,1) + static_deflection;
 
+% ====== 风扰动模型参数(有色噪声) ======
+% 基准风 (稳态分量，地面系)
+Vwind_base_x = 0;       % 前向基准风 (m/s)
+Vwind_base_y = 5;       % 侧向基准风 (m/s)
+Vwind_base_z = 0;       % 垂直基准风 (m/s)
+
+% 有色噪声参数
+tau_wind = 10;          % 风相关时间常数 (s)，越大变化越慢
+sigma_wind_x = 0.8;     % X轴风扰动标准差 (m/s)
+sigma_wind_y = 3.0;     % Y轴风扰动标准差 (m/s)
+sigma_wind_z = 0.5;     % Z轴风扰动标准差 (m/s)
+
+% 有色噪声增益 (白噪声 → 1/(tau*s+1) 后的幅值补偿)
+K_wind_x = sigma_wind_x * sqrt(2 * tau_wind);
+K_wind_y = sigma_wind_y * sqrt(2 * tau_wind);
+K_wind_z = sigma_wind_z * sqrt(2 * tau_wind);
+
 % 配平时，升力和阻力
-D0=1400; 
+D0=1400;
 L0=5102;
 delta_p0=-4.5;%D
 % 爬升性能
