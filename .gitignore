@@ -4,6 +4,9 @@ slprj/
 *.slx.autosave
 *.asv
 
+# MATLAB data files (ignore all .mat)
+*.mat
+
 # MATLAB autosave
 *.m~
 
