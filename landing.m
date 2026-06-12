@@ -52,5 +52,6 @@ delta_p0=-4.5;%D
 % 爬升性能
 gamma_climbmax=asin((3000-D0)/(m*g))*57.3;%最大爬升角
 VR=100;
-
+X_landing_start = -11500;
+V_flare = 100;
 save("landingplan.mat");

@@ -43,7 +43,7 @@ R       = 8000;            % 圆弧半径 (m)
 X_aim   = -500;            % 接地点 X (m)
 H_exp   = 20;              % 拉飘起始高度 (m)
 sigma   = 6;               % 拉飘时间常数 (s)
-H_entry = 1000;             % 进场高度 (m)
+H_entry = 1001;             % 进场高度 (m)
 
 a1 = abs(gamma1);  a2 = abs(gamma2);
 

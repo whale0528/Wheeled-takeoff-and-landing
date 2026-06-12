@@ -192,5 +192,5 @@ delta_p0=-4.5;%D
 gamma_climbmax=asin((3000-D0)/(m*g))*57.3;%最大爬升角
 VR=100;%抬轮速度
 V_stall_clean = 86.2;%失速速度
-
+V_cruise = 200;
 save("basedata.mat");
