@@ -1,3 +1,5 @@
+%% 数据来源：《基于A320气动数据的无人机自主起降巡航完整仿真方案》
+%% 所有 § 引用均指向该文档对应章节
 %%
 %% 数学运算
 HD = 180 / pi;        % rad -> deg
@@ -211,7 +213,7 @@ L0 = m * g;          % N,  配平升力 (=mg)
 delta_p0 = -4.5;     % deg, 配平升降舵偏角（待重算）
 
 % 爬升性能
-gamma_climbmax = asin((thrust_max - D0) / (m * g)) * 57.3;  % 最大爬升角 (deg)
+gamma_climbmax = asin((thrust_max - D0) / (m * g)) * HD;  % 最大爬升角 (deg)
 VR = VR_min;             % m/s, 抬轮速度
 V_flare = 1.4 * V_stall_full;  % m/s, 拉平速度 ≈82.8
 
