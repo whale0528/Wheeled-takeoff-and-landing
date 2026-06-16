@@ -1,0 +1,79 @@
+<h2>现有文件 vs A320 方案文档 — 数据映射</h2>
+<p class="subtitle">6 个 .m 文件当前使用 ~600kg 小型无人机参数，需要替换为 A320 级别数据</p>
+
+<div class="section">
+  <h3>文件结构与数据来源对照</h3>
+  <table style="width:100%; border-collapse:collapse; font-size:0.9em;">
+    <tr style="background:#1a1a2e;">
+      <th style="padding:8px;text-align:left;">现有文件</th>
+      <th style="padding:8px;text-align:left;">主要内容</th>
+      <th style="padding:8px;text-align:left;">A320 方案对应章节</th>
+    </tr>
+    <tr style="background:#16213e;">
+      <td style="padding:8px;"><code>basedata.m</code></td>
+      <td style="padding:8px;">质量、几何、惯量、气动系数、起落架、风模型</td>
+      <td style="padding:8px;">§4(几何)、§6(气动系数)、§10(导数)、§14(起落架)、§21(减震器)</td>
+    </tr>
+    <tr style="background:#0f3460;">
+      <td style="padding:8px;"><code>plane_int.m</code></td>
+      <td style="padding:8px;">汇总初始化脚本</td>
+      <td style="padding:8px;">§70(主循环顺序)</td>
+    </tr>
+    <tr style="background:#16213e;">
+      <td style="padding:8px;"><code>takeoff_parameter.m</code></td>
+      <td style="padding:8px;">起飞初始状态、VR、爬升参考</td>
+      <td style="padding:8px;">§12(参考速度)、§42(抬轮)、§43(SRS)、§57(起飞阶段)</td>
+    </tr>
+    <tr style="background:#0f3460;">
+      <td style="padding:8px;"><code>landing.m</code></td>
+      <td style="padding:8px;">着陆初始状态、VR/Vapp</td>
+      <td style="padding:8px;">§48(进近速度)、§59(进近着陆)</td>
+    </tr>
+    <tr style="background:#16213e;">
+      <td style="padding:8px;"><code>control_design.m</code></td>
+      <td style="padding:8px;">纵向/横航向控制器增益设计</td>
+      <td style="padding:8px;">§63(增益调度)、§35(角速度内环)、§36(姿态外环)</td>
+    </tr>
+    <tr style="background:#0f3460;">
+      <td style="padding:8px;"><code>landing_trajectory.m</code></td>
+      <td style="padding:8px;">着陆轨迹几何：陡下滑→圆弧→浅下滑→拉飘</td>
+      <td style="padding:8px;">§47(GS下滑道)、§49(FLARE拉平)</td>
+    </tr>
+  </table>
+</div>
+
+<div class="section">
+  <h3>关键参数对比</h3>
+  <table style="width:100%; border-collapse:collapse; font-size:0.85em;">
+    <tr style="background:#1a1a2e;">
+      <th style="padding:6px;text-align:left;">参数</th>
+      <th style="padding:6px;text-align:center;">当前小型无人机</th>
+      <th style="padding:6px;text-align:center;">A320 (方案文档)</th>
+    </tr>
+    <tr style="background:#16213e;">
+      <td style="padding:6px;">质量 m</td>
+      <td style="padding:6px;text-align:center;">600 kg</td>
+      <td style="padding:6px;text-align:center;">42,500~79,000 kg</td>
+    </tr>
+    <tr style="background:#0f3460;">
+      <td style="padding:6px;">机翼面积 S</td>
+      <td style="padding:6px;text-align:center;">1.2 m²</td>
+      <td style="padding:6px;text-align:center;">122.4 m²</td>
+    </tr>
+    <tr style="background:#16213e;">
+      <td style="padding:6px;">翼展 b</td>
+      <td style="padding:6px;text-align:center;">2.0 m</td>
+      <td style="padding:6px;text-align:center;">35.8 m</td>
+    </tr>
+    <tr style="background:#0f3460;">
+      <td style="padding:6px;">C<sub>Lα</sub> (升力线斜率)</td>
+      <td style="padding:6px;text-align:center;">3.80</td>
+      <td style="padding:6px;text-align:center;">查表 §7 (非线性)</td>
+    </tr>
+    <tr style="background:#16213e;">
+      <td style="padding:6px;">气动模型</td>
+      <td style="padding:6px;text-align:center;">线性导数</td>
+      <td style="padding:6px;text-align:center;">查表 + 构型增量 + 地效修正</td>
+    </tr>
+  </table>
+</div>

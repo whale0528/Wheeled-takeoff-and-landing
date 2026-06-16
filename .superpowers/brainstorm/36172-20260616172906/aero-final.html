@@ -1,0 +1,87 @@
+<h2>§14.3 气动模型 — 最终版（已实现）</h2>
+<p class="subtitle">基于A320文档 §14.3，无量纲化 p̂/p̂/r̂ = {p,q,r}·{b,c,b}/(2·Va)</p>
+
+<style>
+.fb { background:#0f3460; padding:10px 14px; margin:6px 0; font-family:monospace; font-size:0.80em; line-height:2.0; border-radius:6px; }
+.y { color:#e9c46a; } .g { color:#4ecca3; } .s { color:#888; font-size:0.82em; }
+</style>
+
+<div class="fb">
+<span style="font-size:1.1em;"><strong>CL</strong> = <span class="y">K_GE</span>·[<span class="y">K_CL,cruise</span>·<span class="g">CL_table(α)</span> + <span class="y">s_Lq</span>·<span class="y">CLq</span>·q̂ + <span class="y">s_Lδe</span>·<span class="y">CLde</span>·δe] + <span class="y">ΔCL_flap</span> + <span class="y">ΔCL_sp</span></span><br>
+<span class="s">升力 = 地效×[巡航标量×基础升力表 + 俯仰率升力 + 升降舵升力] + 襟翼增升 + 扰流板卸升</span>
+</div>
+
+<div class="fb">
+<span style="font-size:1.1em;"><strong>CD</strong> = <span class="y">CD0</span> + <span class="y">k_i_eff</span>·(CL − <span class="y">CL_D0_config</span>)² + <span class="y">ΔCD_flap</span> + <span class="y">ΔCD_gear</span> + <span class="y">ΔCD_sp</span></span><br>
+<span class="s">阻力 = 零升阻力 + 诱导阻力 + 襟翼增阻 + 起落架增阻 + 扰流板增阻</span>
+</div>
+
+<div class="fb">
+<span style="font-size:1.1em;"><strong>Cm</strong> = <span class="y">s_mα</span>·<span class="g">Cm_table(α)</span> + <span class="y">s_mq</span>·<span class="y">Cmq</span>·q̂ + <span class="y">s_mδe</span>·<span class="y">Cmde</span>·<span class="g">K_δe(α)</span>·δe + <span class="y">ΔCm_flap</span> + <span class="y">ΔCm_gear</span> + <span class="y">ΔCm_sp</span></span><br>
+<span class="s">俯仰力矩 = 基础力矩表 + 俯仰阻尼 + 升降舵力矩(含舵效衰减) + 构型增量</span><br>
+<span style="color:#e94560;">⚠ K_δe(α) 仅用于 Cm，CL 公式中不乘</span>
+</div>
+
+<div class="fb">
+<strong>CY</strong> = <span class="y">s_Yβ</span>·<span class="y">CSb</span>·β + <span class="y">s_Yp</span>·<span class="y">CYp</span>·p̂ + <span class="y">s_Yr</span>·<span class="y">CSr</span>·r̂ + <span class="y">s_Yδr</span>·<span class="y">CSdr</span>·δr
+</div>
+
+<div class="fb">
+<strong>Cl</strong> = <span class="y">s_lβ</span>·<span class="y">Clb</span>·β + <span class="y">s_lp</span>·<span class="y">Clp</span>·p̂ + <span class="y">s_lr</span>·<span class="y">Clr</span>·r̂ + <span class="y">s_lδa</span>·<span class="y">Clda</span>·δa + <span class="y">s_lδr</span>·<span class="y">Cldr</span>·δr
+</div>
+
+<div class="fb">
+<strong>Cn</strong> = <span class="y">s_nβ</span>·<span class="y">Cnb</span>·β + <span class="y">s_np</span>·<span class="y">Cnp</span>·p̂ + <span class="y">s_nr</span>·<span class="y">Cnr</span>·r̂ + <span class="y">s_nδa</span>·<span class="y">Cnda</span>·δa + <span class="y">s_nδr</span>·<span class="y">Cndr</span>·δr
+</div>
+
+<!-- 构型 -->
+<div class="section" style="margin-top:16px;"><h3>构型增量 Δ 项</h3>
+<div class="fb">
+<strong>襟翼:</strong><br>
+g_L_TE = interp1(δf_tab, gL_TE_tab, δf_TE, 'pchip') &nbsp;<span class="s">§13.1</span>&nbsp;
+g_D_TE = interp1(δf_tab, gD_TE_tab, δf_TE, 'pchip')<br>
+g_L_LE = interp1(δs_tab, gL_LE_tab, δs_LE, 'pchip') &nbsp;<span class="s">§13.2</span>&nbsp;
+g_D_LE = interp1(δs_tab, gD_LE_tab, δs_LE, 'pchip')<br><br>
+ΔCL_flap = <span class="y">1.867</span>·[g_L_TE + <span class="y">0.01</span>·g_L_LE]<br>
+ΔCD_flap = <span class="y">0.1316</span>·[g_D_TE + <span class="y">0.5</span>·g_D_LE]<br>
+ΔCm_flap = <span class="y">−0.084</span>·[δf_TE/<span class="y">0.698</span> + δs_LE/<span class="y">0.471</span>]
+</div>
+<div class="fb">
+<strong>扰流板:</strong>&nbsp; η_sym = (δ_spL+δ_spR)/(2·δ_sp_max)<br>
+ΔCL_sp = <span class="y">−0.466875</span>·η_sym &nbsp;&nbsp;
+ΔCD_sp = <span class="y">0.05775</span>·η_sym &nbsp;&nbsp;
+ΔCm_sp = <span class="y">0.023</span>·η_sym
+</div>
+<div class="fb">
+<strong>起落架:</strong>&nbsp; η_gear ∈ [0,1]<br>
+ΔCD_gear = <span class="y">0.0372</span>·η_gear &nbsp;&nbsp;
+ΔCm_gear = <span class="y">0.0022</span>·η_gear
+</div>
+</div>
+
+<!-- 参数分类 -->
+<div class="section" style="margin-top:16px;"><h3>参数分类总计</h3>
+<table style="width:100%; border-collapse:collapse; font-size:0.75em;">
+<tr style="background:#1a1a2e;"><th>类型</th><th>数量</th><th>内容</th></tr>
+<tr><td style="color:#4ecca3;">插值表</td><td>7组</td><td>CL(α)§7, Cm(α)§8, K_δe(α)§9, gL_TE(δf)§13.1, gD_TE(δf)§13.1, gL_LE(δs)§13.2, gD_LE(δs)§13.2</td></tr>
+<tr><td style="color:#e9c46a;">单点常数</td><td>30个</td><td>CLde,CLq,CD0,k_i_eff,CL_D0,Cmde,Cmq + CSb,CYp,CSr,CSdr + Clb~Cldr(5) + Cnb~Cndr(5) + 襟翼3 + 扰流板3 + 起落架2 + K_GE,K_CL_cruise</td></tr>
+<tr><td>标定缩放 s_*</td><td>20个</td><td>全部初值=1.0, §14.3 警告不可默认用于实飞</td></tr>
+<tr><td>构型限位</td><td>6个</td><td>δf_TE_max, δs_LE_max, δ_sp_max_air, δ_sp_max_gnd, CL_D0_flap</td></tr>
+</table>
+</div>
+
+<!-- 输入信号 -->
+<div class="section" style="margin-top:12px;"><h3>Simulink 输入信号</h3>
+<table style="width:100%; border-collapse:collapse; font-size:0.78em;">
+<tr style="background:#1a1a2e;"><th>信号</th><th>范围</th><th>用途</th></tr>
+<tr><td>α</td><td>−3.15~3.15 rad</td><td>CL_table, Cm_table, Kde_table 插值</td></tr>
+<tr><td>q̂</td><td>无量纲</td><td>CLq·q̂, Cmq·q̂ 俯仰率贡献</td></tr>
+<tr><td>p̂, r̂</td><td>无量纲</td><td>横侧向阻尼和耦合项</td></tr>
+<tr><td>β</td><td>rad</td><td>侧滑角</td></tr>
+<tr><td>δe, δa, δr</td><td>rad</td><td>舵面偏角</td></tr>
+<tr><td>δf_TE</td><td>0~0.698 rad</td><td>后缘襟翼偏角 → gL/gD 插值</td></tr>
+<tr><td>δs_LE</td><td>0~0.471 rad</td><td>前缘缝翼偏角 → gL/gD 插值</td></tr>
+<tr><td>δ_spL, δ_spR</td><td>0~δ_sp_max</td><td>左右扰流板 → η_sym 计算</td></tr>
+<tr><td>η_gear</td><td>0~1</td><td>起落架位置</td></tr>
+</table>
+</div>

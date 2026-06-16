@@ -1,0 +1,131 @@
+<h2>A320 气动参数完整总结</h2>
+<p class="subtitle">当前 basedata.m 中所有气动量：定义方式、来源、用法</p>
+
+<div class="section">
+  <h3>总气动模型</h3>
+  <p style="font-family:monospace;font-size:0.78em;background:#0f3460;padding:12px;line-height:2;">
+  <strong>CL</strong> = CL_table(α) + CLde · K_δe(α) · δe + ΔCL_flap · flap_ratio<br>
+  <strong>CD</strong> = CD0 + k_i_eff · (CL − CL_D0)² + ΔCD_flap · flap_ratio<br>
+  <strong>Cm</strong> = Cm_table(α) + Cmde · K_δe(α) · δe + ΔCm_flap · flap_ratio<br>
+  <strong>CY</strong> = CSb·β + CSr·r̂ + CSdr·δr<br>
+  <strong>Cl</strong> = Clb·β + Clp·p̂ + Clr·r̂ + Clda·δa + Cldr·δr<br>
+  <strong>Cn</strong> = Cnb·β + Cnp·p̂ + Cnr·r̂ + Cnda·δa + Cndr·δr
+  </p>
+</div>
+
+<div class="section">
+  <h3>一、插值表（3 组，已实现）</h3>
+  <table style="width:100%; border-collapse:collapse; font-size:0.8em;">
+    <tr style="background:#1a1a2e;"><th style="padding:6px;text-align:left;">表名</th><th style="padding:6px;text-align:center;">节点数</th><th style="padding:6px;text-align:left;">自变量</th><th style="padding:6px;text-align:left;">来源</th><th style="padding:6px;text-align:left;">用法</th></tr>
+    <tr style="background:#16213e;">
+      <td style="padding:6px;"><code>CL_table(α)</code></td>
+      <td style="text-align:center;">9</td>
+      <td>迎角 α</td>
+      <td>§7</td>
+      <td>基础升力，pchip 插值。覆盖失速前/后</td>
+    </tr>
+    <tr style="background:#0f3460;">
+      <td style="padding:6px;"><code>Cm_table(α)</code></td>
+      <td style="text-align:center;">14</td>
+      <td>迎角 α</td>
+      <td>§8</td>
+      <td>基础俯仰力矩，pchip 插值。⚠️ 符号待验</td>
+    </tr>
+    <tr style="background:#16213e;">
+      <td style="padding:6px;"><code>Kde_table(α)</code></td>
+      <td style="text-align:center;">11</td>
+      <td>迎角 α</td>
+      <td>§9</td>
+      <td>升降舵效能倍率。大迎角时舵效衰减→0→反向</td>
+    </tr>
+  </table>
+</div>
+
+<div class="section">
+  <h3>二、单点常数 — 纵向（12 个）</h3>
+  <table style="width:100%; border-collapse:collapse; font-size:0.8em;">
+    <tr style="background:#1a1a2e;"><th style="padding:6px;text-align:left;">变量</th><th style="padding:6px;text-align:center;">数值</th><th style="padding:6px;text-align:left;">含义</th><th style="padding:6px;text-align:left;">来源</th><th style="padding:6px;text-align:left;">用法</th></tr>
+    <tr style="background:#16213e;"><td><code>CL0</code></td><td style="text-align:center;">0.138</td><td>α=0 时升力系数</td><td>§7 表</td><td>参考值（实际用 CL 表）</td></tr>
+    <tr style="background:#0f3460;"><td><code>CLde</code></td><td style="text-align:center;">−1.652</td><td>升降舵升力导数</td><td>§10</td><td>CL 中 δe 项系数，需乘 K_δe(α)</td></tr>
+    <tr style="background:#16213e;"><td><code>CD0</code></td><td style="text-align:center;">0.01865</td><td>零升阻力系数</td><td>§6</td><td>阻力极线基准</td></tr>
+    <tr style="background:#0f3460;"><td><code>K</code></td><td style="text-align:center;">0.07448</td><td>有效诱导阻力因子 k_i,eff</td><td>§4.1</td><td>CD 中 (CL−CL_D0)² 系数</td></tr>
+    <tr style="background:#16213e;"><td><code>CL_D0</code></td><td style="text-align:center;">0.175</td><td>最小阻力对应升力</td><td>§6</td><td>阻力极线中心偏移</td></tr>
+    <tr style="background:#0f3460;"><td><code>Cm0</code></td><td style="text-align:center;">0.0</td><td>α=0 时俯仰力矩</td><td>§8 表</td><td>参考值（实际用 Cm 表）</td></tr>
+    <tr style="background:#16213e;"><td><code>Cmde</code></td><td style="text-align:center;">−11.78</td><td>升降舵俯仰力矩导数</td><td>§9</td><td>Cm 中 δe 项系数，需乘 K_δe(α)</td></tr>
+    <tr style="background:#0f3460;"><td><code>ΔCL_flap</code></td><td style="text-align:center;">1.867</td><td>襟翼增升总系数</td><td>§6</td><td>CL += ΔCL_flap × flap_ratio</td></tr>
+    <tr style="background:#16213e;"><td><code>ΔCD_flap</code></td><td style="text-align:center;">0.1316</td><td>襟翼增阻总系数</td><td>§6</td><td>CD += ΔCD_flap × flap_ratio</td></tr>
+    <tr style="background:#0f3460;"><td><code>ΔCm_flap</code></td><td style="text-align:center;">−0.084</td><td>襟翼俯仰力矩增量</td><td>§6</td><td>Cm += ΔCm_flap × flap_ratio</td></tr>
+    <tr style="background:#16213e;"><td><code>CL_max</code></td><td style="text-align:center;">1.76</td><td>光洁构型最大 CL</td><td>从 CL 表取 max</td><td>失速判断基准</td></tr>
+    <tr style="background:#0f3460;"><td><code>CL_hard_max</code></td><td style="text-align:center;">1.76</td><td>短时允许最大 CL</td><td>=CL_max</td><td>过载保护</td></tr>
+  </table>
+</div>
+
+<div class="section">
+  <h3>三、单点常数 — 横侧向（13 个，全部来自 §10）</h3>
+  <table style="width:100%; border-collapse:collapse; font-size:0.8em;">
+    <tr style="background:#1a1a2e;"><th style="padding:6px;text-align:left;">变量</th><th style="padding:6px;text-align:center;">数值</th><th style="padding:6px;text-align:left;">物理含义</th><th style="padding:6px;text-align:left;">对应标准符号</th></tr>
+    <tr style="background:#16213e;"><td><code>CSb</code></td><td style="text-align:center;">−3.252</td><td>侧滑角→侧力</td><td>CYβ</td></tr>
+    <tr style="background:#0f3460;"><td><code>CSr</code></td><td style="text-align:center;">17.395</td><td>偏航率→侧力</td><td>CYr</td></tr>
+    <tr style="background:#16213e;"><td><code>CSdr</code></td><td style="text-align:center;">−2.793</td><td>方向舵→侧力</td><td>CYδr</td></tr>
+    <tr style="background:#0f3460;"><td><code>Clb</code></td><td style="text-align:center;">0.554</td><td>侧滑→滚转力矩（上反效应）</td><td>Clβ</td></tr>
+    <tr style="background:#16213e;"><td><code>Clp</code></td><td style="text-align:center;">−2.078</td><td>滚转率→滚转力矩（滚转阻尼）</td><td>Clp</td></tr>
+    <tr style="background:#0f3460;"><td><code>Clr</code></td><td style="text-align:center;">−2.621</td><td>偏航率→滚转力矩</td><td>Clr</td></tr>
+    <tr style="background:#16213e;"><td><code>Clda</code></td><td style="text-align:center;">−0.291</td><td>副翼→滚转力矩（副翼效能）</td><td>Clδa</td></tr>
+    <tr style="background:#0f3460;"><td><code>Cldr</code></td><td style="text-align:center;">0.476</td><td>方向舵→滚转力矩</td><td>Clδr</td></tr>
+    <tr style="background:#16213e;"><td><code>Cnb</code></td><td style="text-align:center;">1.296</td><td>侧滑→偏航力矩（风标稳定性）</td><td>Cnβ</td></tr>
+    <tr style="background:#0f3460;"><td><code>Cnp</code></td><td style="text-align:center;">0.742</td><td>滚转率→偏航力矩</td><td>Cnp</td></tr>
+    <tr style="background:#16213e;"><td><code>Cnr</code></td><td style="text-align:center;">−67.303</td><td>偏航率→偏航力矩（偏航阻尼）</td><td>Cnr</td></tr>
+    <tr style="background:#0f3460;"><td><code>Cnda</code></td><td style="text-align:center;">−0.007</td><td>副翼→偏航力矩（不利偏航）</td><td>Cnδa</td></tr>
+    <tr style="background:#16213e;"><td><code>Cndr</code></td><td style="text-align:center;">1.321</td><td>方向舵→偏航力矩（方向舵效能）</td><td>Cnδr</td></tr>
+  </table>
+</div>
+
+<div class="section">
+  <h3>四、已删除的项</h3>
+  <table style="width:100%; border-collapse:collapse; font-size:0.8em;">
+    <tr style="background:#1a1a2e;"><th style="padding:6px;text-align:left;">变量</th><th style="padding:6px;text-align:left;">原因</th></tr>
+    <tr style="background:#16213e;"><td><code>CLa</code>（单值斜率）</td><td>被 CL_table(α) 插值表替代，失速前后斜率不同</td></tr>
+    <tr style="background:#0f3460;"><td><code>Cma</code>（单值斜率）</td><td>被 Cm_table(α) 插值表替代</td></tr>
+    <tr style="background:#16213e;"><td><code>CLq</code></td><td>俯仰率对升力影响不建模（按用户要求去掉）</td></tr>
+    <tr style="background:#0f3460;"><td><code>Cmq</code></td><td>俯仰率对俯仰力矩影响不建模（按用户要求去掉）</td></tr>
+  </table>
+</div>
+
+<div class="section">
+  <h3>五、文档中有但当前未实现的插值表</h3>
+  <table style="width:100%; border-collapse:collapse; font-size:0.8em;">
+    <tr style="background:#1a1a2e;"><th style="padding:6px;text-align:left;">表名</th><th style="padding:6px;text-align:center;">节点</th><th style="padding:6px;text-align:left;">作用</th><th style="padding:6px;text-align:left;">未实现原因</th></tr>
+    <tr style="background:#16213e;"><td>襟翼TE g_L(δf), g_D(δf)</td><td style="text-align:center;">6</td><td>后缘襟翼偏角→升力/阻力比例</td><td>用户选择暂不加</td></tr>
+    <tr style="background:#0f3460;"><td>缝翼LE g_L(δs), g_D(δs)</td><td style="text-align:center;">6</td><td>前缘缝翼偏角→升力/阻力比例</td><td>用户选择暂不加</td></tr>
+    <tr style="background:#16213e;"><td>地效 K_GE(Mach)</td><td style="text-align:center;">10</td><td>近地升力增益</td><td>用户选择暂不加</td></tr>
+    <tr style="background:#0f3460;"><td>阻力Mach ΔCD0(M)</td><td style="text-align:center;">12</td><td>跨音速阻力修正</td><td>用户选择暂不加</td></tr>
+  </table>
+</div>
+
+<div class="section">
+  <h3>CL 完整计算（Simulink 中应实现为）</h3>
+  <p style="font-family:monospace;font-size:0.78em;background:#0f3460;padding:10px;line-height:1.8;">
+  CL_base  = interp1(alpha_CL_table, CL_table, α, 'pchip')<br>
+  K_de     = interp1(alpha_Kde_table, Kde_table, α, 'pchip')<br>
+  ΔCL_flap_eff = ΔCL_flap * flap_ratio    <span style="color:#888;">% flap_ratio ∈ [0,1]</span><br>
+  <strong>CL</strong> = CL_base + CLde * K_de * δe + ΔCL_flap_eff
+  </p>
+</div>
+
+<div class="section">
+  <h3>Cm 完整计算</h3>
+  <p style="font-family:monospace;font-size:0.78em;background:#0f3460;padding:10px;line-height:1.8;">
+  Cm_base  = interp1(alpha_Cm_table, Cm_table, α, 'pchip')<br>
+  K_de     = interp1(alpha_Kde_table, Kde_table, α, 'pchip')<br>
+  ΔCm_flap_eff = ΔCm_flap * flap_ratio<br>
+  <strong>Cm</strong> = Cm_base + Cmde * K_de * δe + ΔCm_flap_eff
+  </p>
+</div>
+
+<div class="section">
+  <h3>CD 完整计算</h3>
+  <p style="font-family:monospace;font-size:0.78em;background:#0f3460;padding:10px;line-height:1.8;">
+  <strong>CD</strong> = CD0 + K*(CL − CL_D0)² + ΔCD_flap*flap_ratio<br>
+  <span style="color:#888;">% 注意：CD 依赖 CL（因为诱导阻力），必须先算 CL 再算 CD</span>
+  </p>
+</div>

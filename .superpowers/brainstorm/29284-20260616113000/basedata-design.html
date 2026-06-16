@@ -1,0 +1,115 @@
+<h2>basedata.m — A320 参数替换对照</h2>
+<p class="subtitle">线性模型保持不变，数值从文档各节提取</p>
+
+<div class="section">
+  <h3>1. 基本参数</h3>
+  <table style="width:100%; border-collapse:collapse; font-size:0.82em;">
+    <tr style="background:#1a1a2e;"><th style="padding:6px;text-align:left;">参数</th><th style="padding:6px;text-align:center;">原值</th><th style="padding:6px;text-align:center;">A320 新值</th><th style="padding:6px;text-align:center;">文档来源</th></tr>
+    <tr style="background:#16213e;"><td>m</td><td style="text-align:center;">600 kg</td><td style="text-align:center;color:#4ecca3;">42500.244 kg</td><td style="text-align:center;">§14.1</td></tr>
+    <tr style="background:#0f3460;"><td>S_ref</td><td style="text-align:center;">1.2 m²</td><td style="text-align:center;color:#4ecca3;">122.397 m²</td><td style="text-align:center;">§4</td></tr>
+    <tr style="background:#16213e;"><td>b_ref</td><td style="text-align:center;">2.0 m</td><td style="text-align:center;color:#4ecca3;">35.8 m</td><td style="text-align:center;">§4</td></tr>
+    <tr style="background:#0f3460;"><td>c_ref</td><td style="text-align:center;">0.9 m</td><td style="text-align:center;color:#e9c46a;">3.419 m (S/b代理)</td><td style="text-align:center;">§4.1 注</td></tr>
+  </table>
+</div>
+
+<div class="section">
+  <h3>2. 转动惯量</h3>
+  <table style="width:100%; border-collapse:collapse; font-size:0.82em;">
+    <tr style="background:#1a1a2e;"><th style="padding:6px;text-align:left;">参数</th><th style="padding:6px;text-align:center;">原值</th><th style="padding:6px;text-align:center;">A320 新值</th></tr>
+    <tr style="background:#16213e;"><td>Ixx (滚转)</td><td style="text-align:center;">120</td><td style="text-align:center;color:#4ecca3;">1,340,911</td></tr>
+    <tr style="background:#0f3460;"><td>Iyy (俯仰)</td><td style="text-align:center;">480</td><td style="text-align:center;color:#4ecca3;">3,326,789</td></tr>
+    <tr style="background:#16213e;"><td>Izz (偏航)</td><td style="text-align:center;">520</td><td style="text-align:center;color:#4ecca3;">4,292,707</td></tr>
+    <tr style="background:#0f3460;"><td>Ixz (耦合)</td><td style="text-align:center;">0</td><td style="text-align:center;color:#4ecca3;">1,356</td></tr>
+  </table>
+</div>
+
+<div class="section">
+  <h3>3. 纵向气动系数（光洁构型）</h3>
+  <table style="width:100%; border-collapse:collapse; font-size:0.80em;">
+    <tr style="background:#1a1a2e;"><th style="padding:6px;text-align:left;">参数</th><th style="padding:6px;text-align:center;">原值</th><th style="padding:6px;text-align:center;">A320 新值</th><th style="padding:6px;text-align:center;">来源</th></tr>
+    <tr style="background:#16213e;"><td>CL0</td><td style="text-align:center;">0.083</td><td style="text-align:center;color:#4ecca3;">0.138</td><td style="text-align:center;">§7 α=0</td></tr>
+    <tr style="background:#0f3460;"><td>CLa</td><td style="text-align:center;">3.80</td><td style="text-align:center;color:#e9c46a;">~8.5 (从 §7 线性段拟合)</td><td style="text-align:center;">§7</td></tr>
+    <tr style="background:#16213e;"><td>CLq</td><td style="text-align:center;">4.50</td><td style="text-align:center;color:#4ecca3;">-57.116</td><td style="text-align:center;">§10</td></tr>
+    <tr style="background:#0f3460;"><td>CLde</td><td style="text-align:center;">0.28</td><td style="text-align:center;color:#4ecca3;">-1.652</td><td style="text-align:center;">§10</td></tr>
+    <tr style="background:#16213e;"><td>CD0</td><td style="text-align:center;">0.045</td><td style="text-align:center;color:#4ecca3;">0.01865</td><td style="text-align:center;">§6</td></tr>
+    <tr style="background:#0f3460;"><td>K (诱导阻力)</td><td style="text-align:center;">0.12</td><td style="text-align:center;color:#4ecca3;">0.07448</td><td style="text-align:center;">§4.1</td></tr>
+    <tr style="background:#16213e;"><td>CL_D0 (最小阻力点)</td><td style="text-align:center;">—</td><td style="text-align:center;color:#4ecca3;">0.175</td><td style="text-align:center;">§6</td></tr>
+    <tr style="background:#0f3460;"><td>Cm0</td><td style="text-align:center;">0.060</td><td style="text-align:center;color:#4ecca3;">0</td><td style="text-align:center;">§8 α=0</td></tr>
+    <tr style="background:#16213e;"><td>Cma</td><td style="text-align:center;">-0.80</td><td style="text-align:center;color:#e9c46a;">~5.0 (从 §8 线性段拟合)</td><td style="text-align:center;">§8 ⚠️</td></tr>
+    <tr style="background:#0f3460;"><td>Cmq</td><td style="text-align:center;">-18.0</td><td style="text-align:center;color:#4ecca3;">-1245.917</td><td style="text-align:center;">§10</td></tr>
+    <tr style="background:#16213e;"><td>Cmde</td><td style="text-align:center;">-0.90</td><td style="text-align:center;color:#4ecca3;">-11.78</td><td style="text-align:center;">§9</td></tr>
+  </table>
+</div>
+
+<div class="section">
+  <h3>4. 横侧向气动系数</h3>
+  <table style="width:100%; border-collapse:collapse; font-size:0.80em;">
+    <tr style="background:#1a1a2e;"><th style="padding:6px;text-align:left;">参数</th><th style="padding:6px;text-align:center;">原值</th><th style="padding:6px;text-align:center;">A320 新值</th></tr>
+    <tr style="background:#16213e;"><td>CYβ / CSb</td><td style="text-align:center;">-0.70</td><td style="text-align:center;color:#4ecca3;">-3.252</td></tr>
+    <tr style="background:#0f3460;"><td>CYr / CSr</td><td style="text-align:center;">0.12</td><td style="text-align:center;color:#4ecca3;">17.395</td></tr>
+    <tr style="background:#16213e;"><td>CYdr / CSdr</td><td style="text-align:center;">0.18</td><td style="text-align:center;color:#4ecca3;">-2.793</td></tr>
+    <tr style="background:#0f3460;"><td>Clβ / Clb</td><td style="text-align:center;">-0.08</td><td style="text-align:center;color:#4ecca3;">0.554</td></tr>
+    <tr style="background:#16213e;"><td>Clp</td><td style="text-align:center;">-0.70</td><td style="text-align:center;color:#4ecca3;">-2.078</td></tr>
+    <tr style="background:#0f3460;"><td>Clr</td><td style="text-align:center;">0.08</td><td style="text-align:center;color:#4ecca3;">-2.621</td></tr>
+    <tr style="background:#16213e;"><td>Clda</td><td style="text-align:center;">-0.20</td><td style="text-align:center;color:#4ecca3;">-0.291</td></tr>
+    <tr style="background:#0f3460;"><td>Cldr</td><td style="text-align:center;">—</td><td style="text-align:center;color:#4ecca3;">0.476</td></tr>
+    <tr style="background:#16213e;"><td>Cnβ / Cnb</td><td style="text-align:center;">0.25</td><td style="text-align:center;color:#4ecca3;">1.296</td></tr>
+    <tr style="background:#0f3460;"><td>Cnp</td><td style="text-align:center;">-0.04</td><td style="text-align:center;color:#4ecca3;">0.742</td></tr>
+    <tr style="background:#16213e;"><td>Cnr</td><td style="text-align:center;">-0.45</td><td style="text-align:center;color:#4ecca3;">-67.303</td></tr>
+    <tr style="background:#0f3460;"><td>Cnda</td><td style="text-align:center;">—</td><td style="text-align:center;color:#4ecca3;">-0.007</td></tr>
+    <tr style="background:#16213e;"><td>Cndr</td><td style="text-align:center;">-0.15</td><td style="text-align:center;color:#4ecca3;">1.321</td></tr>
+  </table>
+</div>
+
+<div class="section">
+  <h3>5. 襟翼增量（新增）</h3>
+  <table style="width:100%; border-collapse:collapse; font-size:0.82em;">
+    <tr style="background:#1a1a2e;"><th style="padding:6px;text-align:left;">参数</th><th style="padding:6px;text-align:center;">值</th><th style="padding:6px;text-align:center;">来源</th></tr>
+    <tr style="background:#16213e;"><td>ΔCL_flap</td><td style="text-align:center;color:#4ecca3;">1.867</td><td style="text-align:center;">§6</td></tr>
+    <tr style="background:#0f3460;"><td>ΔCD_flap</td><td style="text-align:center;color:#4ecca3;">0.1316</td><td style="text-align:center;">§6</td></tr>
+    <tr style="background:#16213e;"><td>ΔCm_flap</td><td style="text-align:center;color:#4ecca3;">-0.084</td><td style="text-align:center;">§6</td></tr>
+    <tr style="background:#0f3460;"><td>CL_max_flap</td><td style="text-align:center;color:#e9c46a;">推算 ~2.86</td><td style="text-align:center;">§12 全襟翼Vs反推</td></tr>
+    <tr style="background:#16213e;"><td>VFE (放襟翼限速)</td><td style="text-align:center;color:#4ecca3;">140.97 m/s</td><td style="text-align:center;">§12</td></tr>
+  </table>
+</div>
+
+<div class="section">
+  <h3>6. 舵面限位</h3>
+  <table style="width:100%; border-collapse:collapse; font-size:0.82em;">
+    <tr style="background:#1a1a2e;"><th style="padding:6px;text-align:left;">参数</th><th style="padding:6px;text-align:center;">原值</th><th style="padding:6px;text-align:center;">A320 新值</th></tr>
+    <tr style="background:#16213e;"><td>de_max (升降舵上偏)</td><td style="text-align:center;">25°</td><td style="text-align:center;color:#4ecca3;">25° (0.436 rad)</td></tr>
+    <tr style="background:#0f3460;"><td>de_min (升降舵下偏)</td><td style="text-align:center;">-25°</td><td style="text-align:center;color:#4ecca3;">-17° (-0.297 rad)</td></tr>
+    <tr style="background:#16213e;"><td>da_max (副翼)</td><td style="text-align:center;">25°</td><td style="text-align:center;color:#4ecca3;">25° (0.436 rad)</td></tr>
+    <tr style="background:#0f3460;"><td>dr_max (方向舵)</td><td style="text-align:center;">25°</td><td style="text-align:center;color:#4ecca3;">25° (0.436 rad)</td></tr>
+  </table>
+</div>
+
+<div class="section">
+  <h3>7. 推力</h3>
+  <table style="width:100%; border-collapse:collapse; font-size:0.82em;">
+    <tr style="background:#1a1a2e;"><th style="padding:6px;text-align:left;">参数</th><th style="padding:6px;text-align:center;">原值</th><th style="padding:6px;text-align:center;">A320 新值</th></tr>
+    <tr style="background:#16213e;"><td>thrust_max</td><td style="text-align:center;">3,000 N</td><td style="text-align:center;color:#4ecca3;">240,000 N</td></tr>
+    <tr style="background:#0f3460;"><td>thrust_time_constant</td><td style="text-align:center;">—</td><td style="text-align:center;color:#e9c46a;">1.5 s (估)</td></tr>
+  </table>
+</div>
+
+<div class="section">
+  <h3>8. 起落架几何</h3>
+  <table style="width:100%; border-collapse:collapse; font-size:0.82em;">
+    <tr style="background:#1a1a2e;"><th style="padding:6px;text-align:left;">参数</th><th style="padding:6px;text-align:center;">原值</th><th style="padding:6px;text-align:center;">A320 新值</th></tr>
+    <tr style="background:#16213e;"><td>前轮 X (前为正)</td><td style="text-align:center;">2.0 m</td><td style="text-align:center;color:#4ecca3;">11.235 m</td></tr>
+    <tr style="background:#0f3460;"><td>主轮 X (后为负)</td><td style="text-align:center;">-0.333 m</td><td style="text-align:center;color:#4ecca3;">-1.405 m</td></tr>
+    <tr style="background:#16213e;"><td>主轮 Y (±)</td><td style="text-align:center;">±0.8 m</td><td style="text-align:center;color:#4ecca3;">±4.267 m</td></tr>
+    <tr style="background:#0f3460;"><td>轮径 (前/主)</td><td style="text-align:center;">0.18 m</td><td style="text-align:center;color:#4ecca3;">0.381 / 0.584 m</td></tr>
+    <tr style="background:#16213e;"><td>静止CG离地高</td><td style="text-align:center;">~0.83 m</td><td style="text-align:center;color:#4ecca3;">2.71 m</td></tr>
+    <tr style="background:#0f3460;"><td>轴距</td><td style="text-align:center;">~2.33 m</td><td style="text-align:center;color:#4ecca3;">12.64 m</td></tr>
+  </table>
+</div>
+
+<div class="section" style="margin-top:16px; padding:12px; background:#1a1a2e; border-left:3px solid #e9c46a;">
+  <p style="margin:0;font-size:0.85em;">
+    ⚠️ <strong>标注"待标定"的参数：</strong>CLa、Cma（从表格线性段提取，符号和斜率待验证）、
+    起落架刚度/阻尼（保持原公式，用A320质量缩放）、推力时间常数（估算值）。
+    所有 §10 的动态导数标为 B/C 级，需在配平和时域响应测试后调整。
+  </p>
+</div>

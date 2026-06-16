@@ -1,0 +1,57 @@
+<h2>control_design.m — A320 控制器增益重算</h2>
+<p class="subtitle">保持原公式结构，替换设计点参数和气动导数</p>
+
+<div class="section">
+  <h3>改动要点</h3>
+  <table style="width:100%; border-collapse:collapse; font-size:0.82em;">
+    <tr style="background:#1a1a2e;"><th style="padding:6px;text-align:left;">项目</th><th style="padding:6px;text-align:center;">原值</th><th style="padding:6px;text-align:center;">A320 新值</th><th style="padding:6px;text-align:left;">说明</th></tr>
+    <tr style="background:#16213e;"><td>V_control</td><td style="text-align:center;">200 m/s</td><td style="text-align:center;color:#e9c46a;">待定</td><td>设计点速度，影响动压和所有增益</td></tr>
+    <tr style="background:#0f3460;"><td>qc (动压)</td><td style="text-align:center;">0.5*1.225*200²</td><td style="text-align:center;">重算</td><td>随 V_control 变化</td></tr>
+    <tr style="background:#16213e;"><td>m</td><td style="text-align:center;">600</td><td style="text-align:center;">42,500</td><td>质量增大70倍</td></tr>
+    <tr style="background:#0f3460;"><td>S_ref, c_ref, b_ref</td><td style="text-align:center;">1.2, 0.9, 2.0</td><td style="text-align:center;">122.4, 3.42, 35.8</td><td>尺寸增大100倍面积</td></tr>
+    <tr style="background:#16213e;"><td>Iyy, Izz</td><td style="text-align:center;">480, 520</td><td style="text-align:center;">3.33e6, 4.29e6</td><td>惯量增大~8000倍</td></tr>
+    <tr style="background:#0f3460;"><td>CLa (局部斜率)</td><td style="text-align:center;">3.80 (常数)</td><td style="text-align:center;color:#4ecca3;">从 CL 表插值求导</td><td>在配平迎角处取局部斜率</td></tr>
+    <tr style="background:#16213e;"><td>Cma (局部斜率)</td><td style="text-align:center;">-0.80 (常数)</td><td style="text-align:center;color:#4ecca3;">从 Cm 表插值求导</td><td>在配平迎角处取局部斜率</td></tr>
+    <tr style="background:#0f3460;"><td>Cmde</td><td style="text-align:center;">-0.90</td><td style="text-align:center;">-11.78</td><td>§9</td></tr>
+    <tr style="background:#16213e;"><td>CSb (CYβ)</td><td style="text-align:center;">-0.70</td><td style="text-align:center;">-3.252</td><td>§10</td></tr>
+    <tr style="background:#0f3460;"><td>CSdr (CYdr)</td><td style="text-align:center;">0.18</td><td style="text-align:center;">-2.793</td><td>§10</td></tr>
+    <tr style="background:#16213e;"><td>Cnb (Cnβ)</td><td style="text-align:center;">0.25</td><td style="text-align:center;">1.296</td><td>§10</td></tr>
+    <tr style="background:#0f3460;"><td>Cndr</td><td style="text-align:center;">-0.15</td><td style="text-align:center;">1.321</td><td>§10</td></tr>
+  </table>
+</div>
+
+<div class="section">
+  <h3>纵向通道：公式不变，数值重算</h3>
+  <p style="font-family:monospace;font-size:0.78em;background:#0f3460;padding:10px;">
+    wd_pitch = 15;  kesi_pitch = 0.8;  Tr = 1.2;<br>
+    <br>
+    a24 = -Cma_local * qc * S_ref * c_ref / Iyy;<br>
+    a25 = -Cmde * qc * S_ref * c_ref / Iyy;<br>
+    a34 = CLa_local * qc * S_ref / (m * V_control);<br>
+    <br>
+    Kw_pitch  = -2 * kesi_pitch * wd_pitch / a25;<br>
+    K_alpha   = (wd_pitch² - a24) / (2 * kesi_pitch * wd_pitch);<br>
+    Kn_pitch  = -(2.2 * g * wd_pitch²) / (Tr * (wd_pitch² - a24) * V_control * a34);
+  </p>
+</div>
+
+<div class="section">
+  <h3>横航向通道：同样替换</h3>
+  <p style="font-family:monospace;font-size:0.78em;background:#0f3460;padding:10px;">
+    b24 = -Cnβ * qc * S_ref * b_ref / Izz;<br>
+    b27 = -Cndr * qc * S_ref * b_ref / Izz;<br>
+    b34 = (D0 - CYβ * qc * S_ref) / (m * V_control);<br>
+    b37 = -CYdr * qc * S_ref / (m * V_control);<br>
+    <br>
+    Kw_yaw = -2 * kesi_yaw * wd_yaw / b27;<br>
+    K_beta = (wd_yaw² - b24) / (2 * kesi_yaw * wd_yaw);<br>
+    Kn_yaw = (2.2 * g * wd_yaw²) / (Tr_yaw * (wd_yaw² - b24) * V_control * b34);
+  </p>
+</div>
+
+<div class="section" style="background:#1a1a2e; padding:12px; border-left:3px solid #e9c46a;">
+  <p style="margin:0;font-size:0.85em;">
+    ⚠️ <strong>需要确定：</strong>设计点速度 V_control 用哪个？§12 给了巡航 234 m/s、爬升 118.8 m/s。
+    当前代码用 V=200（接近巡航），A320 也沿用巡航速度？还是用一个中间速度（如 150 m/s）兼顾起飞着陆？
+  </p>
+</div>

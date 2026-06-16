@@ -52,21 +52,57 @@ CL_table       = [  0.000;  0.138;  1.320;  1.480;  1.760;  1.750;  1.600;  1.50
 alpha_Cm_table = [ -3.150; -0.800; -0.400; -0.200; -0.100;  0.000;  0.200;  0.230;  0.260;  0.290;  0.310;  0.400;  0.800;  3.150 ];  % rad
 Cm_table       = [  0.000; -2.402; -1.861; -0.842; -0.442;  0.000;  1.173;  1.337;  1.489;  1.723;  1.919;  2.276;  2.992;  0.000 ];
 
+%% 升降舵效能倍率 K_δe(α) 插值表 (来源: §9, 11节点)
+% 仅用于俯仰力矩 Cm 公式！CL 公式中不乘 K_δe
+% Cm 中: Cmde_eff = Cmde * K_δe(α)
+alpha_Kde_table = [ -3.141593; -0.698132; -0.349066; -0.174533; -0.087266;  0.000000;  0.087266;  0.174533;  0.349066;  0.698132;  3.141593 ];  % rad
+Kde_table       = [ -1.000;     0.050;     0.455;     0.853;     1.007;     1.000;     0.839;     0.693;     0.381;    -0.080;   -1.000 ];
+
+%% 后缘襟翼 TE 插值表 (来源: §13.1, 6节点)
+% 襟翼偏角 → 升力比例 g_L, 阻力比例 g_D
+delta_flap_TE_tab = [ 0.000000;  0.087266;  0.174533;  0.261799;  0.349066;  0.698132 ];  % rad
+gL_flap_TE_tab    = [ 0.000;     0.010;     1.300;     1.300;     1.170;     1.000 ];
+gD_flap_TE_tab    = [ 0.000;     0.300;     0.630;     0.850;     0.970;     0.939 ];
+delta_flap_TE_max = 0.698132;  % rad, CONF FULL
+
+%% 前缘缝翼 LE 插值表 (来源: §13.2, 6节点)
+% 缝翼偏角 → 升力比例 g_L, 阻力比例 g_D
+delta_slat_LE_tab = [ 0.000000;  0.314159;  0.314334;  0.383972;  0.384147;  0.471239 ];  % rad
+gL_slat_LE_tab    = [ 1.000;     1.000;     1.000;     1.000;     1.000;     1.000 ];
+gD_slat_LE_tab    = [ 1.000;     0.330;     0.630;     0.850;     0.970;     0.939 ];
+delta_slat_LE_max = 0.471239;  % rad, CONF FULL
+
+%% 构型增量总系数 (来源: §6, §13, §14.3)
+Delta_CL_flap_tot = 1.867;    % 襟翼增升总系数（全放时 g_L=1 对应的最大值）
+Delta_CD_flap_tot = 0.1316;   % 襟翼增阻总系数
+Delta_Cm_flap_tot = -0.084;   % 襟翼俯仰力矩总增量
+CL_D0_clean       = 0.175;    % 光洁构型最小阻力对应 CL (§6)
+CL_D0_flap        = 0.420;    % 放襟翼最小阻力对应 CL (§6)
+CL_D0 = CL_D0_clean;          % 兼容旧变量名，默认光洁
+
+%% 升力修正系数 (来源: §7, §11.1)
+K_CL_cruise = 0.93;    % 巡航升力标量 (来源: cruise_lift_scalar)
+K_GE        = 1.0;     % 地效倍率, 默认1.0, 近地时从 §11.1 表查 (来源: §11.1)
+
 %% 升力系数 (来源: §10, §6)
-CL0   = 0.138;         % α=0 时的升力系数 (来源: §7 表)
-CLde  = -1.652;        % 升降舵升力影响 (来源: §10)
+CL0  = 0.138;          % α=0 时的升力系数 (来源: §7 表)
+CLde = -1.652;         % 升降舵升力影响 (来源: §10)
+CLq  = -57.116;        % 俯仰率 q̂→升力 (来源: §10)
 
 %% 阻力系数 (来源: §6, §4.1)
-CD0   = 0.01865;       % 零升阻力系数 (来源: §6)
-K     = 0.07447685;    % 有效诱导阻力因子 k_i,eff (来源: §4.1)
-CL_D0 = 0.175;         % 零阻力对应升力系数 (来源: §6)
+CD0      = 0.01865;    % 零升阻力系数 (来源: §6)
+k_i_eff  = 0.07447685; % 有效诱导阻力因子 (来源: §4.1)
+K = k_i_eff;            % 兼容旧代码中的 K
 
 %% 俯仰力矩系数 (来源: §9, §10)
-Cm0   = 0.0;           % α=0 时的俯仰力矩 (来源: §8 表)
-Cmde  = -11.78;        % 升降舵俯仰效能基数 (来源: §9)
+Cm0  = 0.0;            % α=0 时的俯仰力矩 (来源: §8 表)
+Cmde = -11.78;         % 升降舵俯仰效能基数 (来源: §9)
+Cmq  = -1245.917;      % 俯仰阻尼 q̂→Cm (来源: §10)
+% Cm 中实际舵效 = Cmde * K_δe(α), K_δe 仅用于 Cm, 不用于 CL
 
 %% 侧向力系数 (来源: §10)
 CSb  = -3.252;         % 侧滑侧力 (CYβ)
+CYp  =  1.833;         % 滚转率 p̂→侧力 (CYp), 新增
 CSr  =  17.395;        % 偏航率侧力 (CYr)
 CSdr = -2.793;         % 方向舵侧力 (CYδr)
 
@@ -84,10 +120,33 @@ Cnr  = -67.303;        % 偏航阻尼 (Cnr)
 Cnda = -0.007;         % 副翼不利偏航 (Cnδa)
 Cndr =  1.321;         % 方向舵偏航效能 (Cnδr)
 
+%% 扰流板气动 (来源: §17)
+% 对称扰流板比例: η_sym = (δ_spL + δ_spR) / (2 * δ_sp_max)
+Delta_CL_sp = -0.466875; % 全扰流板卸升量
+Delta_CD_sp =  0.05775;  % 全扰流板增阻量
+Delta_Cm_sp =  0.023;    % 全扰流板俯仰力矩
+spoiler_max_air = 0.698132; % rad, 空中扰流板最大偏角 (§5)
+spoiler_max_gnd = 0.872665; % rad, 地面扰流板最大偏角 (§5)
+
+%% 起落架气动 (来源: §6, §18)
+% η_gear ∈ [0,1]: 0=收起 1=放下
+Delta_CD_gear = 0.0372;  % 起落架放下增阻
+Delta_Cm_gear = 0.0022;  % 起落架放下俯仰力矩
+
 %% 襟翼增量 (来源: §6)
-Delta_CL_flap = 1.867;  % 襟翼增升总系数
-Delta_CD_flap = 0.1316; % 襟翼增阻总系数
-Delta_Cm_flap = -0.084; % 襟翼俯仰力矩增量
+% 旧名兼容: Delta_CL_flap = Delta_CL_flap_tot, 等
+Delta_CL_flap = Delta_CL_flap_tot;
+Delta_CD_flap = Delta_CD_flap_tot;
+Delta_Cm_flap = Delta_Cm_flap_tot;
+
+%% §14.3 标定缩放量 (初值=1.0, 待配平后逐一标定)
+% 纵向
+s_malpha = 1.0;  s_mq    = 1.0;  s_mdeltae = 1.0;
+s_Lq     = 1.0;  s_Ldeltae = 1.0;
+% 横侧向
+s_Ybeta = 1.0;  s_Yp = 1.0;  s_Yr = 1.0;  s_Ydeltar = 1.0;
+s_lbeta = 1.0;  s_lp = 1.0;  s_lr = 1.0;  s_ldeltaa = 1.0;  s_ldeltar = 1.0;
+s_nbeta = 1.0;  s_np = 1.0;  s_nr = 1.0;  s_ndeltaa = 1.0;  s_ndeltar = 1.0;
 
 %% 气动力限制
 CL_min  = -0.55;
@@ -181,8 +240,8 @@ P_g = eye(3) - e_z*e_z.';
 static_deflection = m * g / sum(k_gear);  % m
 
 % 前-右-下：Z向下
-Zg0 = ground_z - wheel_radius(1) - r_gear_b(3,1) + static_deflection;
-
+%Zg0 = ground_z - wheel_radius(1) - r_gear_b(3,1) + static_deflection;
+Zg0= -10000;
 %% 风扰动模型参数(有色噪声)
 Vwind_base_x = 0;       % 前向基准风 (m/s)
 Vwind_base_y = 5;       % 侧向基准风 (m/s)
@@ -216,5 +275,13 @@ delta_p0 = -4.5;     % deg, 配平升降舵偏角（待重算）
 gamma_climbmax = asin((thrust_max - D0) / (m * g)) * HD;  % 最大爬升角 (deg)
 VR = VR_min;             % m/s, 抬轮速度
 V_flare = 1.4 * V_stall_full;  % m/s, 拉平速度 ≈82.8
+
+%% 保存所有插值表到独立 mat 文件 (供 Simulink 查表模块加载)
+save("aero_tables.mat", ...
+    "alpha_CL_table", "CL_table", ...
+    "alpha_Cm_table", "Cm_table", ...
+    "alpha_Kde_table", "Kde_table", ...
+    "delta_flap_TE_tab", "gL_flap_TE_tab", "gD_flap_TE_tab", ...
+    "delta_slat_LE_tab", "gL_slat_LE_tab", "gD_slat_LE_tab");
 
 save("basedata.mat");

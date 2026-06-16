@@ -1,0 +1,92 @@
+<h2>着陆轨迹方案对比</h2>
+<p class="subtitle">几何轨迹法 vs 闭环制导法 — 核心逻辑完全不同</p>
+
+<div class="split">
+  <div class="mockup" style="flex:1;">
+    <div class="mockup-header">方案 A：几何轨迹法（当前代码）</div>
+    <div class="mockup-body" style="font-size:0.8em;line-height:1.6;">
+      <strong>思路：</strong>在地面预先算好整条 4 段轨迹<br><br>
+      <strong>步骤：</strong><br>
+      ① 陡下滑线：H = -(X - X₀)·tan(γ₁)<br>
+      ② 圆弧过渡：圆心 + 半径几何推导<br>
+      ③ 浅下滑线：H = -(X - X_aim)·tan(γ₂)<br>
+      ④ 指数拉飘：H = H₀·e^(-t/σ)<br><br>
+      <strong>输出：</strong><br>
+      <code>H_cmd = f(X_current)</code><br>
+      一张预计算的 X→H 映射表<br><br>
+      <span style="color:#e94560;">❌ 接地位置固定，无法适应风/速度变化</span><br>
+      <span style="color:#e94560;">❌ 需要手算圆弧切点和半径</span>
+    </div>
+  </div>
+  <div class="mockup" style="flex:1;">
+    <div class="mockup-header">方案 B：闭环制导法（A320 方案）</div>
+    <div class="mockup-body" style="font-size:0.8em;line-height:1.6;">
+      <strong>思路：</strong>传感器实时测量偏差，控制器闭环跟踪<br><br>
+      <strong>步骤：</strong><br>
+      ① GS下滑道：以跑道入口为基准，定义一条固定下滑角直线<br>
+      ② 实时计算高度误差 e_h<br>
+      ③ 俯仰跟踪路径，油门保持速度<br>
+      ④ 进入FLARE时记录 h₀, ḣ₀，计算指数下沉率轨迹<br><br>
+      <strong>输出：</strong><br>
+      <code>θ_c = f(h_err, ḣ_err)</code><br>
+      实时闭环俯仰指令<br><br>
+      <span style="color:#4ecca3;">✅ 自动适应风和速度变化</span><br>
+      <span style="color:#4ecca3;">✅ 不需要预计算轨迹几何</span>
+    </div>
+  </div>
+</div>
+
+<div class="section" style="margin-top:20px;">
+  <h3>关键公式对比</h3>
+
+  <div class="cards">
+    <div class="card" style="width:100%;">
+      <div class="card-body">
+        <h3>下滑道跟踪（替代几何轨迹的①②③段）</h3>
+        <p style="font-family:monospace;font-size:0.85em;">
+          下滑路径高度：h<sub>path</sub> = h<sub>thr</sub> + D · tan(3°)   &nbsp;&nbsp;(D = 距入口距离)<br>
+          高度误差：e<sub>h</sub> = h<sub>path</sub> - h<br>
+          目标下沉率：ḣ<sub>c</sub> = V<sub>G</sub>·tan(3°) + K<sub>h</sub>·e<sub>h</sub><br>
+          俯仰跟踪：θ<sub>c</sub> = γ<sub>c</sub> + α<sub>trim</sub> + K<sub>ḣ</sub>(ḣ<sub>c</sub> - ḣ)
+        </p>
+      </div>
+    </div>
+    <div class="card" style="width:100%;">
+      <div class="card-body">
+        <h3>指数FLARE（替代几何轨迹的④段）</h3>
+        <p style="font-family:monospace;font-size:0.85em;">
+          进入瞬间记录：h₀, ḣ₀, V₀, θ₀<br>
+          时间常数：τ = h₀ / (|ḣ₀| - |ḣ<sub>TD</sub>|)<br>
+          目标下沉率：ḣ<sub>c</sub> = -(h + h<sub>b</sub>) / τ<br>
+          俯仰指令：θ<sub>c</sub> = θ₀ + K<sub>ḣ</sub>(ḣ<sub>c</sub> - ḣ) + K<sub>az</sub>(a<sub>z,c</sub> - a<sub>z</sub>)
+        </p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="section">
+  <h3>代码层面的变化</h3>
+  <table style="width:100%; border-collapse:collapse; font-size:0.85em;">
+    <tr style="background:#1a1a2e;">
+      <th style="padding:8px;text-align:left;">文件</th>
+      <th style="padding:8px;text-align:left;">方案 A：只改数字</th>
+      <th style="padding:8px;text-align:left;">方案 B：改架构</th>
+    </tr>
+    <tr style="background:#16213e;">
+      <td style="padding:8px;"><code>landing_trajectory.m</code></td>
+      <td style="padding:8px;">保留几何推导，替换 Vs、V_app、gamma1/2、R、sigma 等数字</td>
+      <td style="padding:8px;"><strong>废弃。</strong>轨迹预计算不再需要</td>
+    </tr>
+    <tr style="background:#0f3460;">
+      <td style="padding:8px;"><code>control_design.m</code></td>
+      <td style="padding:8px;">替换设计点动压、气动导数</td>
+      <td style="padding:8px;">增加 GS 跟踪增益、FLARE 增益设计</td>
+    </tr>
+    <tr style="background:#16213e;">
+      <td style="padding:8px;">Simulink 模型</td>
+      <td style="padding:8px;">不改</td>
+      <td style="padding:8px;"><strong>需要改。</strong>着陆控制器改为 GS 跟踪 + FLARE 状态机</td>
+    </tr>
+  </table>
+</div>
