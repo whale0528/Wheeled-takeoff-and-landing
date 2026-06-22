@@ -1,0 +1,100 @@
+<h2>C* 控制律 — 567三回路改造方案（已确认接口）</h2>
+<p class="subtitle">基于 PitchNormalLaw.cpp L1711-1718 和 A320姿态控制器说明 §3.1</p>
+
+<style>.fb{background:#0f3460;padding:10px 14px;margin:6px 0;font-family:monospace;font-size:0.78em;line-height:2;border-radius:6px}.y{color:#e9c46a}.g{color:#4ecca3}.r{color:#e94560}.s{color:#888;font-size:0.82em}</style>
+
+<div class="section"><h3>当前 vs 改造后</h3>
+<div class="fb">
+<span class="r">旧 (三回路级联):</span>&nbsp;&nbsp;nz_err → ∫ → α_err × Kα → q_err × Kw → de<br>
+<span class="g">新 (C* 单回路):</span>&nbsp;&nbsp;C*_err → [PID] → de &nbsp;&nbsp;<span class="s">q 作为阻尼前馈并联注入，不串级</span>
+</div></div>
+
+<div class="section"><h3>1. C* 被控量计算 (§3.1 + PitchNormalLaw L1503-1507)</h3>
+<div class="fb">
+Nz_comp = Nz / cos(θ) / cos(φ) &nbsp;&nbsp;<span class="s">补偿俯仰和滚转角</span><br>
+Vm = <span class="y">lookup(Vc_kn, Vm_table)</span> &nbsp;&nbsp;<span class="s">1-D 查表，空速→交叉速度</span><br>
+<strong>C*_meas = Nz_comp + (Vm / g) × q</strong><br>
+<strong>C*_dem  = nz_cmd</strong> &nbsp;&nbsp;<span class="s">从制导来的法向过载指令</span>
+</div>
+
+<table style="width:100%;border-collapse:collapse;font-size:0.75em;margin-top:4px">
+<tr style="background:#1a1a2e"><th>项</th><th>含义</th><th>来源</th><th>取值</th></tr>
+<tr><td>Nz</td><td>法向过载 (g)</td><td>已有输入 nz</td><td><span class="g">端口 u2</span></td></tr>
+<tr><td>θ, φ</td><td>俯仰/滚转角</td><td>From 块读取</td><td><span class="y">需新增 2 个 From</span></td></tr>
+<tr><td>Vm</td><td>C* 交叉速度</td><td>PitchNormalLaw L1506</td><td><span class="y">1-D Lookup f(Vc)</span>, 见下表</td></tr>
+<tr><td>g</td><td>重力常数</td><td>Constants</td><td><span class="g">9.80665</span></td></tr>
+<tr><td>q</td><td>俯仰角速率</td><td>已有输入 q</td><td><span class="g">端口 u3</span></td></tr>
+<tr><td>nz_cmd</td><td>法向过载指令</td><td>已有输入 nz_cmd</td><td><span class="g">端口 u1</span></td></tr>
+</table>
+</div>
+
+<div class="section"><h3>2. Vm 查表数据（PitchNormalLaw.cpp L1506-1507）</h3>
+<table style="width:100%;border-collapse:collapse;font-size:0.78em">
+<tr style="background:#1a1a2e"><th>Vc (kn)</th><th>0</th><th>50</th><th>100</th><th>150</th><th>200</th><th>250</th><th>300</th><th>400</th></tr>
+<tr><td>Vm (kn)</td><td>0</td><td>50</td><td>100</td><td>150</td><td>200</td><td>250</td><td>300</td><td>400</td></tr>
+</table>
+<p class="s" style="margin:2px 0">简化为 Vm_kn = Vc_kn（1:1映射）。需转换成 m/s: ×0.5144。或用你飞机的速度量级自定义断点。</p>
+</div>
+
+<div class="section"><h3>3. PID 控制律（PitchNormalLaw L1711-1718）</h3>
+<div class="fb">
+e_C* = C*_dem − C*_meas<br>
+<strong>de_raw = Kp(Vc) × e_C* + Kq(Vc) × q + Ki × ∫e_C*·dt</strong>
+</div>
+
+<table style="width:100%;border-collapse:collapse;font-size:0.75em;margin-top:4px">
+<tr style="background:#1a1a2e"><th>项</th><th>作用</th><th>取值方式</th><th>初值建议</th></tr>
+<tr><td><span class="y">Kp(Vc)</span></td><td>C*误差→舵面比例</td><td>1-D 查表 f(Vc)，Vc↑→Kp↓<br><span class="s">因动压增大舵效增强</span></td><td>Vc=200m/s: Kp≈1.5 deg/e_C*<br>Vc=100m/s: Kp≈4.0 deg/e_C*</td></tr>
+<tr><td><span class="y">Kq(Vc)</span></td><td>俯仰率阻尼</td><td>1-D 查表 f(Vc)<br><span class="s">高速高阻尼防振荡</span></td><td>Vc=200m/s: Kq≈0.8 deg/(deg/s)<br>Vc=100m/s: Kq≈0.5 deg/(deg/s)</td></tr>
+<tr><td><span class="y">Ki</span></td><td>自动配平</td><td>按构型切换常数<br><span class="s">光洁0.3°/s 襟翼0.7°/s 地面0.7°/s</span></td><td>0.3 deg/s（光洁巡航）</td></tr>
+</table>
+<p class="s" style="margin:2px 0">注：A320 的 D 项不走 e_C* 的导数，直接用 q 反馈替代（Kq(Vc)·q）。这避免了微分噪声放大。</p>
+</div>
+
+<div class="section"><h3>4. 保护与限幅</h3>
+<table style="width:100%;border-collapse:collapse;font-size:0.75em">
+<tr style="background:#1a1a2e"><th>保护</th><th>条件</th><th>动作</th><th>实现块</th></tr>
+<tr><td>Nz 上限</td><td>—</td><td>光洁 +2.5g, 襟翼 +2.0g</td><td>Saturation on C*_dem</td></tr>
+<tr><td>Nz 下限</td><td>—</td><td>光洁 −1.0g, 襟翼 0g</td><td>Saturation on C*_dem</td></tr>
+<tr><td>积分抗饱和</td><td>de 饱和时</td><td>回算/冻结 I</td><td>Integrator back-calculation</td></tr>
+<tr><td>配平冻结</td><td>拉平 / |φ|>30° / Nz>1.25 / Nz<0.5</td><td>Ki=0 或冻结积分</td><td>Switch on Ki</td></tr>
+<tr><td>舵面限幅</td><td>—</td><td>[−17°, +25°]</td><td>Saturation on de_raw</td></tr>
+<tr><td>舵面速率</td><td>—</td><td>~30 deg/s</td><td>Rate Limiter</td></tr>
+</table>
+</div>
+
+<div class="section"><h3>5. 阶段适配（飞行阶段 5 6 7）</h3>
+<table style="width:100%;border-collapse:collapse;font-size:0.75em">
+<tr style="background:#1a1a2e"><th>阶段</th><th>C* 控制</th><th>构型</th><th>Nz 限幅</th><th>Ki</th><th>特殊</th></tr>
+<tr><td>5 巡航</td><td>✅</td><td>光洁</td><td>[−1, +2.5]</td><td>0.3</td><td>—</td></tr>
+<tr><td>6 进场</td><td>✅</td><td>襟翼</td><td>[0, +2.0]</td><td>0.7</td><td>—</td></tr>
+<tr><td>7 LOC/GS</td><td>✅</td><td>襟翼</td><td>[0, +2.0]</td><td>0.7</td><td>—</td></tr>
+<tr><td>8-10 下滑</td><td>✅+Flare</td><td>着陆</td><td>[0, +2.0]</td><td>冻结</td><td>θ_c → -2°</td></tr>
+<tr><td>11-13 接地</td><td>❌ 旁通</td><td>—</td><td>—</td><td>—</td><td>切 Direct</td></tr>
+</table>
+</div>
+
+<div class="section"><h3>6. Simulink 模块清单（在 567子系统内新增）</h3>
+<table style="width:100%;border-collapse:collapse;font-size:0.75em">
+<tr style="background:#1a1a2e"><th>模块</th><th>数量</th><th>参数</th><th>用途</th></tr>
+<tr><td>From</td><td>3</td><td>Vc, theta, phi</td><td>读取空速和姿态角</td></tr>
+<tr><td>Trig</td><td>2</td><td>cos</td><td>Nz补偿: Nz/cos(θ)/cos(φ)</td></tr>
+<tr><td>1-D Lookup</td><td>3</td><td>Vm(Vc), Kp(Vc), Kq(Vc)</td><td>增益调度</td></tr>
+<tr><td>Gain</td><td>2</td><td>1/g, Ki</td><td>C*计算、积分增益</td></tr>
+<tr><td>Sum</td><td>4</td><td>±配置</td><td>C*_meas, e_C*, PID_sum, de</td></tr>
+<tr><td>Product</td><td>2</td><td>—</td><td>Kp×e, Kq×q</td></tr>
+<tr><td>Integrator</td><td>1</td><td>+回算/复位</td><td>自动配平 I 项</td></tr>
+<tr><td>Rate Limiter</td><td>1</td><td>30 deg/s</td><td>舵面速率</td></tr>
+<tr><td>Saturation</td><td>3</td><td>C*_dem, de, I</td><td>限幅</td></tr>
+<tr><td>Switch</td><td>2</td><td>阶段/构型</td><td>Ki 切换, 配平冻结</td></tr>
+</table>
+</div>
+
+<div class="section" style="background:#1a1a2e;padding:12px;border-left:3px solid #e9c46a;margin-top:12px">
+<p style="margin:0;font-size:0.85em">
+⚠️ <strong>需要确认后即可实现：</strong><br>
+1. Vm 表暂用 1:1（Vm=Vc），是否 OK 还是需要你飞机的速度区间重设？<br>
+2. Kp/Kq 表暂无 A320 精确值，先用量纲分析给初值，后续辨识。OK？<br>
+3. 原三回路的伪攻角估计、a34 计算（Subsystem blk_4203 + blk_7767 共 ~12 个块）<strong>全部删除</strong>，替换为 C* 结构，确认？
+</p>
+</div>

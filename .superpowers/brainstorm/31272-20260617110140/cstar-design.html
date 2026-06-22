@@ -1,0 +1,150 @@
+<h2>A320 C* 控制律 — 567三回路子系统改造方案</h2>
+<p class="subtitle">基于 PitchNormalLaw.cpp 和 A320_姿态控制器阶段与结构说明.md</p>
+
+<style>
+.fb { background:#0f3460; padding:10px 14px; margin:6px 0; font-family:monospace; font-size:0.80em; line-height:2.0; border-radius:6px; }
+.note { color:#e9c46a; } .grn { color:#4ecca3; } .red { color:#e94560; } .gray { color:#888; font-size:0.82em; }
+</style>
+
+<div class="section">
+<h3>1. 核心公式：C* 被控量</h3>
+<div class="fb">
+<strong>C* = Nz + (Vm / g) * q</strong><br>
+<span class="gray">法向过载 + 交叉速度/重力 × 俯仰率 → 混合被控量</span>
+</div>
+
+<table style="width:100%; border-collapse:collapse; font-size:0.78em; margin-top:8px;">
+<tr style="background:#1a1a2e;"><th>项</th><th>含义</th><th>来源</th><th>取值方式</th></tr>
+<tr><td><code>Nz</code></td><td>法向过载 (g)</td><td>IMU/加速度计</td><td><span class="grn">模型已有</span>，来自 nz 信号</td></tr>
+<tr><td><code>Vm</code></td><td>C* 交叉速度 (m/s)</td><td>PitchNormalLaw.cpp §Vm_currentms</td><td><span class="note">查表 f(Vc)</span>，典型值 150~200 m/s</td></tr>
+<tr><td><code>g</code></td><td>重力加速度</td><td>常量</td><td><span class="grn">9.80665 m/s²</span></td></tr>
+<tr><td><code>q</code></td><td>俯仰角速率 (rad/s)</td><td>IMU</td><td><span class="grn">模型已有</span></td></tr>
+</table>
+
+<p class="gray" style="margin:4px 0;">物理意义：低速时 q 主导（类似俯仰率指令），高速时 Nz 主导（类似过载指令）。Vm 控制两者的"切换速度"。</p>
+</div>
+
+<div class="section">
+<h3>2. 顶层信号流</h3>
+<div class="fb">
+<strong>输入:</strong> nz_cmd(制导), nz(传感器), q(传感器), Vc(空速), Flight_Phase(状态机), θ, φ<br>
+<strong>输出:</strong> de_cmd_deg (升降舵指令 deg)<br>
+<br>
+nz_cmd ──→ [C*_dem] ──→ ⓔ ──→ [Kp(Vc)] ─┐<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;│<br>
+Nz ──→ ╮&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;├─Ⓢ────→ [RateLimiter] → de_cmd<br>
+q ───→ [Vm/g] ──→ Ⓢ → <strong>C*_meas</strong> ──┘&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;│&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;↑<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;q ──→ [Kq(Vc)] ──┤&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;↑<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;│&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;↑<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;∫e·dt ─→ [Ki(Vc)] ──┤&nbsp;&nbsp;(←自动配平通道)</span>
+</div>
+</div>
+
+<div class="section">
+<h3>3. 逐项详解</h3>
+
+<h4>3.1 C*_dem — 需求值生成</h4>
+<div class="fb">
+C*_dem = nz_cmd &nbsp;&nbsp;<span class="gray">(制导给出的法向过载指令)</span><br>
+<span class="gray">注：A320 有人驾驶时侧杆位置 → C*_dem 查表。无人机可从制导直接取 nz_cmd</span>
+</div>
+
+<h4>3.2 C*_meas — 测量值计算</h4>
+<div class="fb">
+C*_meas = Nz + (Vm/g) × q<br>
+<span class="gray">其中 Nz 需补偿俯仰角影响：Nz_comp = Nz / cos(θ) / cos(φ)</span>
+</div>
+
+<table style="width:100%; border-collapse:collapse; font-size:0.75em; margin-top:4px;">
+<tr style="background:#1a1a2e;"><th>参数</th><th>来源</th><th>取值</th></tr>
+<tr><td>Nz_comp</td><td>PitchNormalLaw L1503</td><td>Nz_g - 1/cos(θ)·cos(φ) → 补偿重力分量</td></tr>
+<tr><td>Vm</td><td>PitchNormalLaw L1506-1507</td><td><span class="note">查表 look1_binlxpw(V_tas_kn, bp, table)</span><br>断点: [0, 50, 100, 150, 200, 250, 300, 400] ks<br>值: [0, 50, 100, 150, 200, 250, 300, 400] → <span class="gray">1-D插值</span></td></tr>
+<tr><td>g</td><td>常量</td><td>9.80665</td></tr>
+</table>
+
+<h4>3.3 PID 结构</h4>
+<div class="fb">
+<strong>de_raw = Kp(Vc) × e_C* + Kd(Vc) × q + Ki(Vc) × ∫e_C*·dt</strong>
+</div>
+
+<table style="width:100%; border-collapse:collapse; font-size:0.75em; margin-top:4px;">
+<tr style="background:#1a1a2e;"><th>项</th><th>物理意义</th><th>来源</th><th>取值方式</th></tr>
+<tr>
+<td><strong>Kp(Vc)</strong></td>
+<td>比例增益（C*误差→舵面）</td>
+<td>PitchNormalLaw §PLUT</td>
+<td><span class="note">1-D 查表 f(Vc_kn)</span><br>Vc↑ → Kp↓（动压增大，舵效增强）<br><span class="gray">典型范围：0.5~2.0 deg/e_C*</span></td>
+</tr>
+<tr>
+<td><strong>Kd(Vc)</strong></td>
+<td>俯仰率阻尼增益</td>
+<td>PitchNormalLaw §DLUT</td>
+<td><span class="note">1-D 查表 f(Vc_kn)</span><br>直接用 q 反馈而非 e_C* 的导数<br><span class="gray">A320 把 D 项放在 q 通道，不放在 C* 误差通道</span></td>
+</tr>
+<tr>
+<td><strong>Ki(Vc)</strong></td>
+<td>积分增益（自动配平）</td>
+<td>PitchNormalLaw §自动配平速率</td>
+<td><span class="note">按飞行构型切换</span><br>光洁: 0.3 deg/s &nbsp; 襟翼: 0.7 deg/s &nbsp; 地面: 0.7 deg/s</td>
+</tr>
+</table>
+
+<h4>3.4 增益表数据（来自 PitchNormalLaw.cpp）</h4>
+<table style="width:100%; border-collapse:collapse; font-size:0.75em;">
+<tr style="background:#1a1a2e;"><th>表名</th><th>断点 Vc_kn</th><th>表值</th><th>用途</th></tr>
+<tr><td>Vm 查表</td><td>[0, 50, 100, 150, 200, 250, 300, 400]</td><td>同上</td><td>C* 计算中的交叉速度</td></tr>
+<tr><td>Loaddemand</td><td>θ_err: [-1, 0, 6, 11, 15] deg</td><td>[1, 1, 0.5, 0.3, 0.3]</td><td>大俯仰误差时限幅</td></tr>
+<tr><td>PLUT (P 增益)</td><td>同 Vc_kn</td><td>需辨识</td><td>Kp(Vc) 调度</td></tr>
+<tr><td>DLUT (D 增益)</td><td>同 Vc_kn</td><td>需辨识</td><td>Kq(Vc) 调度</td></tr>
+</table>
+</div>
+
+<div class="section">
+<h3>4. 保护与限幅</h3>
+<table style="width:100%; border-collapse:collapse; font-size:0.78em;">
+<tr style="background:#1a1a2e;"><th>保护</th><th>触发条件</th><th>动作</th><th>来源</th></tr>
+<tr><td>过载上限</td><td>—</td><td>光洁: Nz<2.5g, 襟翼: Nz<2.0g</td><td>PitchNormalLaw L1560-1573</td></tr>
+<tr><td>过载下限</td><td>—</td><td>光洁: Nz>-1.0g, 襟翼: Nz>0.0g</td><td>同上</td></tr>
+<tr><td>大迎角保护</td><td>α > α_prot</td><td>冻结配平低头，限幅 θ_c</td><td>§39.1</td></tr>
+<tr><td>高速保护</td><td>V > V_prot</td><td>冻结配平抬头</td><td>§39.2</td></tr>
+<tr><td>配平冻结</td><td>拉平/|φ|>30°/Nz>1.25/Nz<0.5</td><td>I 项清零或冻结</td><td>PitchNormalLaw L1483-1496</td></tr>
+<tr><td>舵面限幅</td><td>—</td><td>δe ∈ [-17°, +25°]</td><td>§5</td></tr>
+<tr><td>舵面速率</td><td>—</td><td>~30°/s (可调)</td><td>RateLimiter</td></tr>
+</table>
+</div>
+
+<div class="section">
+<h3>5. 阶段适配</h3>
+<table style="width:100%; border-collapse:collapse; font-size:0.78em;">
+<tr style="background:#1a1a2e;"><th>飞行阶段</th><th>C* 生效?</th><th>特殊处理</th></tr>
+<tr><td>1-4 起飞/爬升</td><td>✅ 正常</td><td>过载限制按襟翼构型切换</td></tr>
+<tr><td>5 巡航</td><td>✅ 正常</td><td>光洁构型, Nz∈[-1, 2.5]</td></tr>
+<tr><td>6-7 进场</td><td>✅ 正常</td><td>襟翼构型, Nz∈[0, 2.0]</td></tr>
+<tr><td>8-10 下滑/拉平</td><td>✅ 正常 + Flare</td><td>H<50ft: θ_c → −2°, 配平冻结</td></tr>
+<tr><td>11-13 接地/滑跑</td><td>❌ 旁通</td><td>切回 Direct Law 或接地逻辑</td></tr>
+</table>
+</div>
+
+<div class="section" style="margin-top:16px;">
+<h3>6. Simulink 中需新增的模块</h3>
+<table style="width:100%; border-collapse:collapse; font-size:0.78em;">
+<tr style="background:#1a1a2e;"><th>模块</th><th>数量</th><th>用途</th></tr>
+<tr><td>1-D Lookup Table</td><td>3</td><td>Vm(Vc), Kp(Vc), Kq(Vc)</td></tr>
+<tr><td>Gain</td><td>1</td><td>Vm/g</td></tr>
+<tr><td>Sum</td><td>3</td><td>C*_meas, C*_err, PID 求和</td></tr>
+<tr><td>Discrete-Time Integrator</td><td>1</td><td>I 项 (条件积分)</td></tr>
+<tr><td>Rate Limiter</td><td>1</td><td>舵面速率限制</td></tr>
+<tr><td>Saturation</td><td>2</td><td>过载限制、舵面限幅</td></tr>
+<tr><td>Switch/Merge</td><td>2</td><td>阶段切换、AP/手动切换</td></tr>
+</table>
+<p class="gray">注：3 个增益表（Vm、Kp、Kq）的精确数据需要从 A320 PitchNormalLaw.cpp 初始化参数中进一步提取，或用简化值占位后辨识。</p>
+</div>
+
+<div class="section" style="background:#1a1a2e; padding:12px; border-left:3px solid #e9c46a; margin-top:12px;">
+<p style="margin:0;font-size:0.85em;">
+⚠️ <strong>需要确认：</strong><br>
+1. Vm 查表数据直接用 A320 原值（即 Vm≈V_tas），还是用你飞机的速度量级重设？<br>
+2. Kp(Vc) 和 Kq(Vc) 增益表——A320 原值需要从 C++ 参数结构体中提取，是否先用量纲分析估算初值再辨识？<br>
+3. 拉平 flare 逻辑放到这个子系统里还是留在 Guidance 的着陆模块？
+</p>
+</div>
