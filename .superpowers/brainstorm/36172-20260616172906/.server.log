@@ -1,8 +1,0 @@
-{"type":"server-started","port":53687,"host":"127.0.0.1","url_host":"localhost","url":"http://localhost:53687","screen_dir":"D:\\轮式起降\\planmodel\\.superpowers\\brainstorm\\36172-20260616172906"}
-{"type":"screen-added","file":"D:\\轮式起降\\planmodel\\.superpowers\\brainstorm\\36172-20260616172906\\tables-plan.html"}
-{"type":"screen-added","file":"D:\\轮式起降\\planmodel\\.superpowers\\brainstorm\\36172-20260616172906\\aero-summary.html"}
-{"type":"screen-added","file":"D:\\轮式起降\\planmodel\\.superpowers\\brainstorm\\36172-20260616172906\\aero-complete.html"}
-{"type":"screen-added","file":"D:\\轮式起降\\planmodel\\.superpowers\\brainstorm\\36172-20260616172906\\aero-143.html"}
-{"type":"screen-updated","file":"D:\\轮式起降\\planmodel\\.superpowers\\brainstorm\\36172-20260616172906\\aero-143.html"}
-{"type":"screen-added","file":"D:\\轮式起降\\planmodel\\.superpowers\\brainstorm\\36172-20260616172906\\aero-final.html"}
-{"type":"server-stopped","reason":"idle timeout"}
